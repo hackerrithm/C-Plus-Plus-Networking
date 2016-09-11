@@ -39,6 +39,11 @@ int main()
 	{
 		std::cout << "Connected from the client" << std::endl;
 	}
+
+	char outputMessage[256];
+	recv(Connection, outputMessage, sizeof(outputMessage), NULL);
+	cout << "outputMessage: " << outputMessage << endl;
+
 	system("pause");
 	return 0;
 }

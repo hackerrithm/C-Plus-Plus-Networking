@@ -42,6 +42,8 @@ int main()
 	else //If clients connection is accepted
 	{
 		std::cout << "Client connected" << std::endl;
+		char outputMessage[256] = "Welcome! You are a great programmer"; // Craetes a buffer with a message.
+		send(newConnection, outputMessage, sizeof(outputMessage), NULL); // Send outputMessage buffer 
 	}
 
 	system("pause");
