@@ -11,6 +11,24 @@
 
 using namespace std;
 
+SOCKET Connections[100];
+int ConnectionCounter = 0;
+
+void ClientHandlerThread(int index)
+{
+	char buffer[256];
+	while (true)
+	{
+		recv(Connections[index], buffer, sizeof(buffer), NULL);
+		for (int i = 0; i < ConnectionCounter; i++)
+		{
+			if (i == index)
+				continue;
+			send(Connections[i], buffer, sizeof(buffer), NULL);
+		}
+	}
+}
+
 int main()
 {
 	// Winsock start up
@@ -33,17 +51,24 @@ int main()
 	listen(sListen, SOMAXCONN);
 
 	SOCKET newConnection; //Socket to hold the client's connection
-	newConnection = accept(sListen, (SOCKADDR*)&addr, &addrlen); //Accept a new connection
+	int numberOfConnections = 100;
+	for (int i = 0; i < numberOfConnections; i++) // Accepts up to the number of connections determined by numberOfConnections
+	{
+		newConnection = accept(sListen, (SOCKADDR*)&addr, &addrlen); //Accept a new connection
 
-	if (newConnection == 0) 
-	{
-		std::cout << "Failed to accept the client's connection" << std::endl;
-	}
-	else //If clients connection is accepted
-	{
-		std::cout << "Client connected" << std::endl;
-		char outputMessage[256] = "Welcome! You are a great programmer"; // Craetes a buffer with a message.
-		send(newConnection, outputMessage, sizeof(outputMessage), NULL); // Send outputMessage buffer 
+		if (newConnection == 0)
+		{
+			std::cout << "Failed to accept the client's connection" << std::endl;
+		}
+		else //If clients connection is accepted
+		{
+			std::cout << "Client connected" << std::endl;
+			char outputMessage[256] = "Welcome! You are a great programmer"; // Craetes a buffer with a message.
+			send(newConnection, outputMessage, sizeof(outputMessage), NULL); // Send outputMessage buffer 
+			Connections[i] = newConnection;
+			ConnectionCounter++;
+			CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ClientHandlerThread, (LPVOID)(i), NULL, NULL); //Create thread to handle client 
+		}
 	}
 
 	system("pause");

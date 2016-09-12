@@ -11,6 +11,18 @@
 
 using namespace std;
 
+SOCKET Connection;
+
+void ClientThread()
+{
+	char buffer[256];
+	while (true)
+	{
+		recv(Connection, buffer, sizeof(buffer), NULL);
+		cout << buffer << endl;
+	}
+}
+
 int main()
 {
 
@@ -29,7 +41,7 @@ int main()
 	addr.sin_port = htons(1111); //Port
 	addr.sin_family = AF_INET; //IPV4 socket
 
-	SOCKET Connection = socket(AF_INET, SOCK_STREAM, NULL); // Creates a scoket to listen for connections
+	Connection = socket(AF_INET, SOCK_STREAM, NULL); // Creates a scoket to listen for connections
 	if (connect(Connection, (SOCKADDR*)&addr, sizeofaddr) != 0) // If unable to connect
 	{
 		MessageBox(NULL, "Failed to connect", "Error", MB_OK | MB_ICONERROR);
@@ -39,10 +51,14 @@ int main()
 	{
 		std::cout << "Connected from the client" << std::endl;
 	}
-
-	char outputMessage[256];
-	recv(Connection, outputMessage, sizeof(outputMessage), NULL);
-	cout << "outputMessage: " << outputMessage << endl;
+	CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ClientThread, NULL, NULL, NULL); //Create thread to handle client 
+	char buffer[256];
+	while (true)
+	{
+		cin.getline(buffer, sizeof(buffer));
+		send(Connection, buffer, sizeof(buffer), NULL);
+		Sleep(10);
+	}
 
 	system("pause");
 	return 0;
