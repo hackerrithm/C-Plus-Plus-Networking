@@ -1,26 +1,66 @@
 /*
 	Client
 */
-
 #pragma comment(lib,"ws2_32.lib")
 
 #define _WINSOCK_DEPRECATED_NO_WARNINGS // for depricated API
 
 #include <WinSock2.h>
 #include <iostream>
+#include <string>
 
 using namespace std;
 
 SOCKET Connection;
 
+enum Packet
+{
+	Packet_ChatMessage,
+	Packet_Test
+};
+
+bool ProcessPacket(Packet packetType)
+{
+	switch (packetType)
+	{
+	case Packet_ChatMessage:
+	{
+		int bufferLength;
+		recv(Connection, (char*)&bufferLength, sizeof(int), NULL);
+		char * buffer = new char[bufferLength + 1]; // Allocating buffer
+		buffer[bufferLength] = '\0';
+		recv(Connection, buffer, bufferLength, NULL);
+		cout << buffer << endl;
+
+		delete[] buffer; // Deallocating buffer
+
+		break;
+	}
+	case Packet_Test:
+		cout << "Receieved the test packet" << endl;
+		break;
+	
+	default:
+		cout << "Unrecognized packet: " << packetType << endl;
+		break;
+	}
+	return true;
+}
+
 void ClientThread()
 {
-	char buffer[256];
+	int bufferLength;
+	Packet packetType;
 	while (true)
 	{
-		recv(Connection, buffer, sizeof(buffer), NULL);
-		cout << buffer << endl;
+		recv(Connection, (char*)&packetType, sizeof(Packet), NULL); // Receive the type of packet
+
+		if (!ProcessPacket(packetType))
+		{
+			break;
+		}
 	}
+	closesocket(Connection);
 }
 
 int main()
@@ -52,11 +92,16 @@ int main()
 		std::cout << "Connected from the client" << std::endl;
 	}
 	CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ClientThread, NULL, NULL, NULL); //Create thread to handle client 
-	char buffer[256];
+
+	string buffer;
 	while (true)
 	{
-		cin.getline(buffer, sizeof(buffer));
-		send(Connection, buffer, sizeof(buffer), NULL);
+		getline(cin, buffer);
+		int bufferLength = sizeof(buffer);
+		Packet packetType = Packet_ChatMessage; // Creates Packet type
+		send(Connection, (char*)&packetType, sizeof(Packet), NULL);
+		send(Connection, (char*)&bufferLength, sizeof(int), NULL); // send length of the message
+		send(Connection, buffer.c_str(), bufferLength, NULL); // sends the message
 		Sleep(10);
 	}
 

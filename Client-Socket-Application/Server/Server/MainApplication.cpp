@@ -14,19 +14,61 @@ using namespace std;
 SOCKET Connections[100];
 int ConnectionCounter = 0;
 
-void ClientHandlerThread(int index)
+enum Packet
 {
-	char buffer[256];
-	while (true)
+	Packet_ChatMessage,
+	Packet_Test
+};
+
+bool ProcessPacket(int index, Packet packetType)
+{
+	int bufferLength;
+	switch (packetType)
 	{
-		recv(Connections[index], buffer, sizeof(buffer), NULL);
+	case Packet_ChatMessage:
+	{
+		recv(Connections[index], (char*)&bufferLength, sizeof(int), NULL); // 
+		char * buffer = new char[bufferLength];
+		recv(Connections[index], buffer, bufferLength, NULL); // Receiving message
+
 		for (int i = 0; i < ConnectionCounter; i++)
 		{
 			if (i == index)
 				continue;
-			send(Connections[i], buffer, sizeof(buffer), NULL);
+			Packet messagePacket = Packet_ChatMessage;
+			send(Connections[i], (char*)&messagePacket, sizeof(Packet), NULL);
+			send(Connections[i], (char*)bufferLength, sizeof(int), NULL);
+			send(Connections[i], buffer, bufferLength, NULL);
+		}
+
+		delete[] buffer;
+
+		break;
+	}
+	case Packet_Test:
+		cout << "Receieved the test packet" << endl;
+		break;
+	default:
+		cout << "Unrecognized packet: " << packetType << endl;
+		break;
+	}
+	return true;
+}
+
+
+void ClientHandlerThread(int index)
+{
+	Packet packetType;
+	while (true)
+	{
+		recv(Connections[index], (char*)&packetType, sizeof(Packet), NULL); // Receive the type of packet
+
+		if (!ProcessPacket(index, packetType))
+		{
+			break;
 		}
 	}
+	closesocket(Connections[index]);
 }
 
 int main()
@@ -63,11 +105,18 @@ int main()
 		else //If clients connection is accepted
 		{
 			std::cout << "Client connected" << std::endl;
-			char outputMessage[256] = "Welcome! You are a great programmer"; // Craetes a buffer with a message.
-			send(newConnection, outputMessage, sizeof(outputMessage), NULL); // Send outputMessage buffer 
 			Connections[i] = newConnection;
-			ConnectionCounter++;
+			numberOfConnections++;
 			CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ClientHandlerThread, (LPVOID)(i), NULL, NULL); //Create thread to handle client 
+			Packet messagePacket = Packet_ChatMessage;
+			send(Connections[i], (char*)&messagePacket, sizeof(Packet), NULL);
+			string outputMessage = "Welcome! You are a great programmer"; // Craetes a buffer with a message.
+			int outputMessageSize = outputMessage.size();
+			send(newConnection, (char*)&outputMessageSize, sizeof(int), NULL); // Send size of outputMessage
+			send(newConnection, outputMessage.c_str(), outputMessageSize, NULL);	
+
+			Packet testPacket = Packet_Test;
+			send(Connections[i], (char*)&testPacket, sizeof(Packet), NULL);
 		}
 	}
 
