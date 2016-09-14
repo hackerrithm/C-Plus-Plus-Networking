@@ -1,4 +1,1 @@
-﻿  MainApplication.cpp
-c:\users\mavern\documents\github\c-plus-plus-networking\client-socket-application\client\client\mainapplication.cpp(52): warning C4101: 'bufferLength': unreferenced local variable
-  Client.vcxproj -> C:\Users\Mavern\Documents\GitHub\C-Plus-Plus-Networking\Client-Socket-Application\Client\Debug\Client.exe
-  Client.vcxproj -> C:\Users\Mavern\Documents\GitHub\C-Plus-Plus-Networking\Client-Socket-Application\Client\Debug\Client.pdb (Full PDB)
+﻿LINK : fatal error LNK1104: cannot open file 'C:\Users\Mavern\Documents\GitHub\C-Plus-Plus-Networking\Client-Socket-Application\Client\Debug\Client.exe'

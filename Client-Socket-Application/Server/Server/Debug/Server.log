@@ -1,3 +1,4 @@
 ﻿  MainApplication.cpp
+c:\users\mavern\documents\github\c-plus-plus-networking\client-socket-application\server\server\mainapplication.cpp(117): warning C4101: 'bufferLength': unreferenced local variable
   Server.vcxproj -> C:\Users\Mavern\Documents\GitHub\C-Plus-Plus-Networking\Client-Socket-Application\Server\Debug\Server.exe
   Server.vcxproj -> C:\Users\Mavern\Documents\GitHub\C-Plus-Plus-Networking\Client-Socket-Application\Server\Debug\Server.pdb (Full PDB)

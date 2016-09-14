@@ -16,8 +16,103 @@ SOCKET Connection;
 enum Packet
 {
 	Packet_ChatMessage,
-	Packet_Test
+	P_Test
 };
+
+
+bool SendInt(int _int)
+{
+	int returnCheck = send(Connection, (char*)&_int, sizeof(int), NULL); // sends integer
+	if (returnCheck == SOCKET_ERROR) // If int failed to send the connectoin 
+	{
+		return false; // didn't get the integer 
+	}
+	else
+	{
+		return true; //  Sucessful in return the int
+	}
+}
+
+bool GetInt(int &_int)
+{
+	int returnCheck = recv(Connection, (char*)&_int, sizeof(int), NULL); // receives integer
+	if (returnCheck == SOCKET_ERROR) // If int failed to send the connectoin 
+	{
+		return false; // didn't get the integer 
+	}
+	else
+	{
+		return true; //  Sucessful in return the int
+	}
+}
+
+bool SendPacketType(Packet _packetType)
+{
+	int returnCheck = send(Connection, (char*)&_packetType, sizeof(Packet), NULL); // sends packetT type
+	if (returnCheck == SOCKET_ERROR) // If packet failed to send due to connection issues
+	{
+		return false; // didn't get the integer 
+	}
+	else
+	{
+		return true; //  Sucessful in return the int
+	}
+}
+
+bool GetPacketType(Packet &_packetType)
+{
+	int returnCheck = recv(Connection, (char*)&_packetType, sizeof(Packet), NULL); // gets packetT type
+	if (returnCheck == SOCKET_ERROR) // If packet failed to send due to connection issues
+	{
+		return false; // didn't get the integer 
+	}
+	else
+	{
+		return true; //  Sucessful in return the int
+	}
+}
+
+bool SendString(string &_string)
+{
+	if (!SendPacketType(Packet_ChatMessage))
+	{
+		return false;
+	}
+	int bufferLength = _string.size();
+	if (!SendInt(bufferLength))
+	{
+		return false;
+	}
+	int returnCheck = send(Connection, _string.c_str(), bufferLength, NULL);
+	if (returnCheck == SOCKET_ERROR)
+	{
+		return false;
+	}
+	else
+	{
+		return true;
+	}
+}
+
+bool GetString(string &_string)
+{
+	int bufferLength;
+	if (!GetInt(bufferLength))
+	{
+		return false;
+	}
+	char* buffer = new char[bufferLength + 1];
+	buffer[bufferLength] = '\0';
+	int renCheck = recv(Connection, buffer, bufferLength, NULL);
+	_string = buffer;
+	delete[] buffer;
+	if (renCheck == SOCKET_ERROR)
+	{
+		return false;
+	}
+	return true;
+}
+
 
 bool ProcessPacket(Packet packetType)
 {
@@ -25,21 +120,14 @@ bool ProcessPacket(Packet packetType)
 	{
 	case Packet_ChatMessage:
 	{
-		int bufferLength;
-		recv(Connection, (char*)&bufferLength, sizeof(int), NULL);
-		char * buffer = new char[bufferLength + 1]; // Allocating buffer
-		buffer[bufferLength] = '\0';
-		recv(Connection, buffer, bufferLength, NULL);
-		cout << buffer << endl;
-
-		delete[] buffer; // Deallocating buffer
-
+		string message;
+		if (!GetString(message))
+		{
+			return false;
+		}
+		cout << message << endl;
 		break;
-	}
-	case Packet_Test:
-		cout << "Receieved the test packet" << endl;
-		break;
-	
+	}	
 	default:
 		cout << "Unrecognized packet: " << packetType << endl;
 		break;
@@ -48,18 +136,18 @@ bool ProcessPacket(Packet packetType)
 }
 
 void ClientThread()
-{
-	int bufferLength;
-	Packet packetType;
+{ 
 	while (true)
 	{
-		recv(Connection, (char*)&packetType, sizeof(Packet), NULL); // Receive the type of packet
+		Packet packetType;
+		//recv(Connection, (char*)&packettype, sizeof(Packet), NULL); // Receive the type of packet
+		if (!(GetPacketType(packetType)))
+			break;
 
 		if (!ProcessPacket(packetType))
-		{
 			break;
-		}
 	}
+	cout << "Lost Connection to Server" << endl;
 	closesocket(Connection);
 }
 
@@ -94,14 +182,14 @@ int main()
 	CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)ClientThread, NULL, NULL, NULL); //Create thread to handle client 
 
 	string buffer;
+	string userInput;
 	while (true)
 	{
-		getline(cin, buffer);
-		int bufferLength = sizeof(buffer);
-		Packet packetType = Packet_ChatMessage; // Creates Packet type
-		send(Connection, (char*)&packetType, sizeof(Packet), NULL);
-		send(Connection, (char*)&bufferLength, sizeof(int), NULL); // send length of the message
-		send(Connection, buffer.c_str(), bufferLength, NULL); // sends the message
+		getline(cin, userInput);
+		if (!SendString(userInput))
+		{
+			break;
+		}
 		Sleep(10);
 	}
 
