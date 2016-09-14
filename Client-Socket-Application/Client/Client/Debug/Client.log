@@ -1,1 +1,2 @@
-﻿LINK : fatal error LNK1104: cannot open file 'C:\Users\Mavern\Documents\GitHub\C-Plus-Plus-Networking\Client-Socket-Application\Client\Debug\Client.exe'
+﻿  MainApplication.cpp
+LINK : fatal error LNK1104: cannot open file 'C:\Users\Mavern\Documents\GitHub\C-Plus-Plus-Networking\Client-Socket-Application\Client\Debug\Client.exe'
